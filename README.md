@@ -53,6 +53,18 @@ immédiatement, sans redémarrage. Pour te reconnecter plus tard : `garmin-mcp-l
 
 Si Garmin répond « Too many requests », attends 15 à 30 min avant de réessayer : chaque tentative ratée prolonge le blocage.
 
+### Déployer une mise à jour
+
+L'application Dokploy est déjà créée (projet « Garmin MCP », identifiants dans `deploy/dokploy.json`).
+
+```bash
+git push origin main
+DOKPLOY_API_KEY_FILE=~/Downloads/dokployapikey.txt python3 scripts/dokploy.py deploy
+DOKPLOY_API_KEY_FILE=~/Downloads/dokployapikey.txt python3 scripts/dokploy.py status
+```
+
+`OWNER_PASSWORD` est rangé hors du dépôt, dans `~/Downloads/garmin-mcp-owner-password.txt`.
+
 ## Ajouter le connecteur dans Claude
 
 claude.ai → **Paramètres → Connecteurs → Ajouter un connecteur personnalisé** :
