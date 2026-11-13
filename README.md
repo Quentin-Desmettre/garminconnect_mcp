@@ -4,15 +4,31 @@ Serveur MCP distant qui permet à Claude (claude.ai, app mobile, Claude Code…)
 
 | Outil | Rôle |
 |---|---|
-| `get_athlete_profile` | FTP, zones de puissance, zones FC, poids |
-| `set_ftp` | Change la FTP et recalcule les zones (`keep_percentages`, `coggan` ou `unchanged`) |
-| `set_power_zones` | Zones de puissance personnalisées (7 planchers en W) |
-| `set_heart_rate_zones` | FC max / repos / seuil, méthode de calcul, planchers des 5 zones |
-| `create_cycling_workout` | Crée une séance vélo structurée (cibles en W, % FTP, zone, bpm, cadence), planification optionnelle |
-| `update_cycling_workout` | Remplace le contenu d'une séance (garde son id et ses dates) |
-| `list_workouts` / `get_workout` / `delete_workout` | Bibliothèque de séances |
-| `schedule_workout` / `reschedule_workout` / `unschedule_workout` / `list_scheduled_workouts` | Calendrier Garmin (synchro montre/compteur) |
-| `garmin_status` | Vérifie la connexion à Garmin |
+| `get_athlete_profile` | FTP, zones de puissance, zones FC, poids, W/kg |
+| `set_ftp` 🔒 | Change la FTP et recalcule les zones (`keep_percentages`, `coggan` ou `unchanged`) |
+| `set_power_zones` 🔒 / `set_heart_rate_zones` 🔒 | Zones personnalisées ; FC max / repos / seuil |
+| `create_cycling_workout` / `create_cycling_workouts` | Séance(s) vélo structurée(s) (W, % FTP, zone, bpm, cadence), avec dates |
+| `update_cycling_workout` / `duplicate_workout` | Modifier une séance ; copier une variante |
+| `list_workouts` / `get_workout` / `delete_workout` 🔒 | Bibliothèque de séances |
+| `schedule_workout(s)` / `reschedule_workout` / `unschedule_workout` 🔒 / `list_scheduled_workouts` | Calendrier Garmin |
+| `update_workouts_for_ftp` 🔒 | Après un test FTP : recalcule les cibles en watts de toutes les séances planifiées d'une période |
+| `list_activities` / `get_activity` | Sorties réalisées ; **prévu vs réalisé étape par étape** (Garmin sait quel tour = quelle étape) |
+| `update_activity` | Corrige le nom, la description ou le type (home trainer ↔ route…) |
+| `get_recovery_status` | Statut d'entraînement Garmin, équilibre de charge, et ATL/CTL/TSB calculés ; sommeil/VFC/Body Battery si montre |
+| `search_exercises` / `create_strength_workout` | Catalogue Garmin (1500+ exercices) ; séance de muscu planifiée |
+| `log_strength_session` / `get_strength_sessions` | Enregistre les charges réellement soulevées ; historique et progression (1RM estimé) |
+| `get_body_composition` / `add_weight` | Poids, composition, W/kg |
+| `garmin_status` | État de la connexion Garmin |
+
+🔒 = confirmation côté serveur : le premier appel ne change rien et renvoie un aperçu + un `confirm_token` ;
+Claude doit te montrer l'aperçu et rappeler l'outil avec le jeton une fois que tu as dit oui.
+
+**Limites connues**
+- Sommeil, VFC, FC de repos, Body Battery et disponibilité à l'entraînement ne sont mesurés par Garmin qu'avec
+  une **montre** portée jour et nuit : avec un Edge seul, ces champs restent vides (l'outil le dit). La charge
+  ATL/CTL/TSB est calculée par le serveur à partir du TSS de tes sorties.
+- Un Edge ne peut pas exécuter de séance de muscu : elles apparaissent dans l'app et le calendrier Garmin, et
+  `log_strength_session` sert à enregistrer ce que tu as réellement fait.
 
 > ⚠️ Garmin n'a pas d'API publique pour ces fonctions : le serveur utilise l'API interne de Garmin Connect via
 > [`garminconnect`](https://github.com/cyberjunky/python-garminconnect) (0.3.20, sans `garth`, devenu obsolète).

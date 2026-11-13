@@ -259,3 +259,36 @@ def summarize_steps(steps: list[dict[str, Any]], indent: str = "") -> list[str]:
             parts.append(f"({s['description']})")
         lines.append(" | ".join(parts))
     return lines
+
+
+def scale_power_targets(workout: dict[str, Any], ratio: float) -> tuple[dict[str, Any], list[str]]:
+    """Return a copy of a Garmin workout with explicit watt targets multiplied by ``ratio``.
+
+    Zone-based targets (zoneNumber) are left alone: they follow the zones.
+    Returns the new workout and a human-readable list of the changes.
+    """
+    import copy
+
+    new = copy.deepcopy(workout)
+    changes: list[str] = []
+
+    def walk(steps: list[dict[str, Any]]) -> None:
+        for s in steps:
+            if s.get("type") == "RepeatGroupDTO":
+                walk(s.get("workoutSteps") or [])
+                continue
+            for prefix in ("", "secondary"):
+                def key(n: str) -> str:
+                    return f"{prefix}{n[0].upper()}{n[1:]}" if prefix else n
+
+                tt = (s.get(key("targetType")) or {}).get("workoutTargetTypeKey")
+                lo, hi = s.get(key("targetValueOne")), s.get(key("targetValueTwo"))
+                if tt == "power.zone" and not s.get(key("zoneNumber")) and lo and hi:
+                    nlo, nhi = float(round(lo * ratio)), float(round(hi * ratio))
+                    s[key("targetValueOne")], s[key("targetValueTwo")] = nlo, nhi
+                    kind = (s.get("stepType") or {}).get("stepTypeKey", "step")
+                    changes.append(f"{kind}: {lo:g}-{hi:g} W -> {nlo:g}-{nhi:g} W")
+
+    for seg in new.get("workoutSegments") or []:
+        walk(seg.get("workoutSteps") or [])
+    return new, changes
