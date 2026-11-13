@@ -1,0 +1,19 @@
+# Dokploy: create a "Compose" service pointing at this repo, set the env vars
+# below in the Environment tab, then add the domain in the Domains tab
+# (service: garmin-mcp, port: 8000, HTTPS on). Dokploy generates the Traefik labels.
+services:
+  garmin-mcp:
+    build: .
+    restart: unless-stopped
+    environment:
+      PUBLIC_URL: ${PUBLIC_URL}
+      OWNER_PASSWORD: ${OWNER_PASSWORD}
+      DATA_DIR: /data
+      PORT: "8000"
+    volumes:
+      - garmin-mcp-data:/data
+    expose:
+      - "8000"
+
+volumes:
+  garmin-mcp-data:
